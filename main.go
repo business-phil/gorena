@@ -1,54 +1,58 @@
-package main
+package gorena
 
 import (
+	"errors"
 	"fmt"
-	"math/rand"
-	"time"
+
+	"github.com/manifoldco/promptui"
 )
 
-type combatant struct {
-	name      string
-	hp        int
-	maxDamage int
-}
-
-func (combatant *combatant) attack(opponent *combatant) (int, bool) {
-	damage := rand.Intn(combatant.maxDamage) + 1
-
-	opponent.hp = opponent.hp - damage
-
-	return damage, opponent.hp <= 0
-}
-
 func main() {
-	var name string
+	namePrompt := promptui.Prompt{
+		Label: "What is your name? ",
+		Validate: func(input string) error {
+			if input == "" {
+				return errors.New("Must enter name")
+			}
+			return nil
+		},
+	}
 
-	fmt.Println("What is your name?")
-
-	// TODO: Accept name with spaces
-	if _, err := fmt.Scanf("%s", &name); err != nil {
+	name, err := namePrompt.Run()
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	fmt.Printf("Welcome, %s\n", name)
 
-	player := &combatant{name, 50, 8}
-	opponent := &combatant{"Opponent", 30, 10}
+	player := &Combatant{name, 50, 50, 8}
+	opponent := &Combatant{"Opponent", 30, 30, 10}
 
-	rand.Seed(time.Now().Unix())
+	actionPrompt := promptui.Select{
+		Label: "What will you do? ",
+		Items: []string{"Attack", "Heal"},
+	}
 
-	for player.hp > 0 && opponent.hp > 0 {
-		playerDamage, opponentIsDead := player.attack(opponent)
-		fmt.Printf("%s hit %s for %d damage\n", player.name, opponent.name, playerDamage)
-		if opponentIsDead {
-			fmt.Println("You win!!")
+	for player.currentHp > 0 && opponent.currentHp > 0 {
+		_, result, err := actionPrompt.Run()
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
-		opponentDamage, playerSsDead := opponent.attack(player)
-		fmt.Printf("%s hit %s for %d damage\n", opponent.name, player.name, opponentDamage)
-		if playerSsDead {
+		if result == "Attack" {
+			_, opponentIsDead := player.Attack(opponent)
+			if opponentIsDead {
+				fmt.Println("You win!!")
+				return
+			}
+		} else if result == "Heal" {
+			player.Heal()
+		}
+
+		_, playerIsDead := opponent.Attack(player)
+		if playerIsDead {
 			fmt.Println("You lose!!")
 			return
 		}
