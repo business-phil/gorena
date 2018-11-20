@@ -1,7 +1,11 @@
 ## How do I enter Gorena?
 
 First, create Gorena
-```go install```
+```
+go install
+```
 
 Then, enter a battle
-```gorena```
+```
+gorena
+```
