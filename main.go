@@ -3,48 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"math/rand"
-	"time"
 
+	"github.com/business-phil/gorena/combatant"
 	"github.com/manifoldco/promptui"
 )
-
-type Combatant struct {
-	name      string
-	maxHp     int
-	currentHp int
-	maxDamage int
-}
-
-func (combatant *Combatant) Attack(opponent *Combatant) (int, bool) {
-	rand.Seed(time.Now().Unix())
-
-	damage := rand.Intn(combatant.maxDamage) + 1
-
-	opponent.currentHp -= damage
-
-	fmt.Printf("%s hit %s for %d damage\n", combatant.name, opponent.name, damage)
-
-	return damage, opponent.currentHp <= 0
-}
-
-func (combatant *Combatant) Heal() (int, bool) {
-	rand.Seed(time.Now().Unix())
-
-	atFullHealth := false
-	healthRestored := rand.Intn(combatant.maxDamage) + rand.Intn(combatant.maxDamage) + 2
-
-	if healthRestored+combatant.currentHp > combatant.maxHp {
-		healthRestored = combatant.maxHp - combatant.currentHp
-		atFullHealth = true
-	}
-
-	combatant.currentHp += healthRestored
-
-	fmt.Printf("%s healed for %d hp\n", combatant.name, healthRestored)
-
-	return healthRestored, atFullHealth
-}
 
 func main() {
 	namePrompt := promptui.Prompt{
@@ -65,15 +27,25 @@ func main() {
 
 	fmt.Printf("Welcome, %s\n", name)
 
-	player := &Combatant{name, 50, 50, 8}
-	opponent := &Combatant{"Opponent", 30, 30, 10}
+	player := &combatant.Combatant{
+		Name:      name,
+		MaxHp:     50,
+		CurrentHp: 50,
+		MaxDamage: 8,
+	}
+	opponent := &combatant.Combatant{
+		Name:      "Opponent",
+		MaxHp:     30,
+		CurrentHp: 30,
+		MaxDamage: 10,
+	}
 
 	actionPrompt := promptui.Select{
 		Label: "What will you do? ",
 		Items: []string{"Attack", "Heal"},
 	}
 
-	for player.currentHp > 0 && opponent.currentHp > 0 {
+	for player.CurrentHp > 0 && opponent.CurrentHp > 0 {
 		_, result, err := actionPrompt.Run()
 		if err != nil {
 			fmt.Println(err)
